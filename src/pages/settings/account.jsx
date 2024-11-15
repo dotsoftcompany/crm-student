@@ -18,9 +18,10 @@ import {
 } from 'firebase/auth';
 
 function Account() {
-  const { teacherData } = useMainContext();
+  const { teacherData, studentData } = useMainContext();
   const { toast } = useToast();
-  const username = teacherData.email?.replace(/@teacher\.uz$/, '');
+
+  const username = teacherData.email?.replace(/@student\.uz$/, '');
 
   const {
     register,
@@ -29,31 +30,34 @@ function Account() {
     reset,
   } = useForm({
     defaultValues: {
-      email: teacherData?.email || '',
-      fullName: teacherData?.fullName || '',
-      phone: teacherData?.phone || '',
-      address: teacherData?.address || '',
-      position: teacherData?.position || '',
+      email: studentData?.email || '',
+      fullName: studentData?.fullName || '',
+      phoneNumber: studentData?.phoneNumber || '',
+      parentPhoneNumber: studentData?.parentPhoneNumber || '',
+      address: studentData?.address || '',
+      telegram: studentData?.telegram || '',
+      passportId: studentData?.passportId || '',
     },
   });
 
   useEffect(() => {
-    if (teacherData) {
+    if (studentData) {
       reset({
-        email: teacherData.email,
-        fullName: teacherData.fullName,
-        phone: teacherData.phone,
-        address: teacherData.address,
-        position: teacherData.position,
+        email: studentData.email,
+        fullName: studentData.fullName,
+        phoneNumber: studentData.phoneNumber,
+        parentPhoneNumber: studentData.parentPhoneNumber,
+        address: studentData.address,
+        telegram: studentData.telegram,
+        passportId: studentData.passportId,
       });
     }
-  }, [teacherData, reset]);
+  }, [studentData, reset]);
 
   const onSubmit = async (data) => {
     try {
-      const docRef = doc(db, 'teachers', teacherData.id);
+      const docRef = doc(db, 'students', studentData.id);
 
-      // Re-authenticate user with the current password
       const credential = EmailAuthProvider.credential(
         auth.currentUser.email,
         data.currentPassword
@@ -61,15 +65,12 @@ function Account() {
       await reauthenticateWithCredential(auth.currentUser, credential);
 
       await updateDoc(docRef, {
-        fullName: data.fullName,
-        phone: data.phone,
-        address: data.address,
-        position: data.position,
+        ...data,
         password: data.newPassword ? data.newPassword : data.currentPassword,
         email: data.email,
       });
 
-      if (data.email !== teacherData.email) {
+      if (data.email !== studentData.email) {
         await updateEmail(auth.currentUser, data.email);
       }
 
@@ -96,10 +97,9 @@ function Account() {
 
       <form onSubmit={handleSubmit(onSubmit)}>
         <div className="space-y-6">
-          {/* Personal Information */}
           <div className="space-y-2">
             <h2 className="text-lg font-semibold">Personal Information</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <Label htmlFor="fullName">Full Name</Label>
                 <Input
@@ -114,38 +114,63 @@ function Account() {
                 )}
               </div>
               <div>
-                <Label htmlFor="position">Position</Label>
-                <Input
-                  id="position"
-                  placeholder="Enter your position"
-                  {...register('position', {
-                    required: 'Position is required',
-                  })}
-                />
-                {errors.position && (
-                  <p className="text-red-600">{errors.position.message}</p>
-                )}
-              </div>
-              <div>
-                <Label htmlFor="phone">Phone</Label>
-                <Input
-                  id="phone"
-                  placeholder="Enter your phone"
-                  type="tel"
-                  {...register('phone', {
-                    required: 'Phone is required',
-                  })}
-                />
-                {errors.phone && (
-                  <p className="text-red-600">{errors.phone.message}</p>
-                )}
-              </div>
-              <div>
                 <Label htmlFor="address">Address</Label>
                 <Input
                   id="address"
                   placeholder="Enter your address"
                   {...register('address')}
+                />
+              </div>
+              <div>
+                <Label htmlFor="phoneNumber">phoneNumber</Label>
+                <Input
+                  id="phoneNumber"
+                  placeholder="Enter your phoneNumber"
+                  type="tel"
+                  {...register('phoneNumber', {
+                    required: 'phoneNumber is required',
+                  })}
+                />
+                {errors.phoneNumber && (
+                  <p className="text-red-600">{errors.phoneNumber.message}</p>
+                )}
+              </div>
+              <div>
+                <Label htmlFor="parentPhoneNumber">parentPhoneNumber</Label>
+                <Input
+                  id="parentPhoneNumber"
+                  placeholder="Enter your parentPhoneNumber"
+                  type="tel"
+                  {...register('parentPhoneNumber', {
+                    required: 'parentPhoneNumber is required',
+                  })}
+                />
+                {errors.parentPhoneNumber && (
+                  <p className="text-red-600">
+                    {errors.parentPhoneNumber.message}
+                  </p>
+                )}
+              </div>
+              <div>
+                <Label htmlFor="passportId">passportId</Label>
+                <Input
+                  id="passportId"
+                  placeholder="Enter your passportId"
+                  {...register('passportId', {
+                    required: 'passportId is required',
+                  })}
+                />
+                {errors.passportId && (
+                  <p className="text-red-600">{errors.passportId.message}</p>
+                )}
+              </div>
+
+              <div>
+                <Label htmlFor="telegram">telegram</Label>
+                <Input
+                  id="telegram"
+                  placeholder="Enter your telegram"
+                  {...register('telegram')}
                 />
               </div>
             </div>
@@ -154,7 +179,7 @@ function Account() {
           {/* Change Email and Password */}
           <div className="space-y-2">
             <h2 className="text-lg font-semibold">Change Email and Password</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <Label htmlFor="email">Email</Label>
                 <Input

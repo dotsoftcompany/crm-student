@@ -24,16 +24,20 @@ export const MainContextProvider = ({ children }) => {
   const [teacherData, setTeacherData] = useState([]);
   const [teacherId, setTeacherId] = useState();
   const [loading, setLoading] = useState(false);
+  const [student, setStudent] = useState([]);
+  const [studentData, setStudentData] = useState([]);
+  const [studentId, setStudentId] = useState();
 
-  const adminId = teacherData?.role;
+  const adminId = studentData?.adminId;
 
+  // working
   useEffect(() => {
-    if (adminId && teacherId) {
-      const fetchTeacherGroupsData = async () => {
+    if (adminId && studentId) {
+      const fetchStudentGroupsData = async () => {
         const groupsCollectionRef = collection(db, `users/${adminId}/groups`);
         const groupsQuery = query(
           groupsCollectionRef,
-          where('teacherId', '==', teacherId)
+          where('students', 'array-contains', studentId)
         );
 
         const unsubscribe = onSnapshot(groupsQuery, (snapshot) => {
@@ -47,10 +51,11 @@ export const MainContextProvider = ({ children }) => {
         return unsubscribe;
       };
 
-      fetchTeacherGroupsData();
+      fetchStudentGroupsData();
     }
-  }, [adminId, teacherId]);
+  }, [adminId, studentId]);
 
+  // working
   useEffect(() => {
     if (adminId) {
       const fetchTeacherCoursesData = async () => {
@@ -71,6 +76,7 @@ export const MainContextProvider = ({ children }) => {
     }
   }, [adminId]);
 
+  // working
   useEffect(() => {
     if (adminId) {
       const fetchTeacherStudentsData = async () => {
@@ -95,29 +101,31 @@ export const MainContextProvider = ({ children }) => {
     }
   }, [adminId]);
 
+  // working
   useEffect(() => {
     setLoading(true);
-    const unsubscribe = onAuthStateChanged(auth, (teacher) => {
-      if (teacher) {
-        setTeacher(teacher);
-        setTeacherId(teacher.uid);
+    const unsubscribe = onAuthStateChanged(auth, (student) => {
+      if (student) {
+        setStudent(student);
+        setStudentId(student.uid);
       } else {
-        setTeacher(null);
-        setTeacherId(null);
+        setStudent(null);
+        setStudentId(null);
       }
       setLoading(false);
     });
     return unsubscribe;
   }, []);
 
+  // working
   useEffect(() => {
-    if (teacherId) {
-      const fetchTeacherData = async () => {
-        const userDocRef = doc(db, 'teachers', teacherId);
+    if (studentId) {
+      const fetchStudentData = async () => {
+        const userDocRef = doc(db, 'students', studentId);
 
         const unsubscribe = onSnapshot(userDocRef, (docSnapshot) => {
           if (docSnapshot.exists()) {
-            setTeacherData({ ...docSnapshot.data(), id: docSnapshot.id });
+            setStudentData({ ...docSnapshot.data(), id: docSnapshot.id });
           } else {
             console.warn('No matching document found with the provided ID.');
           }
@@ -125,9 +133,9 @@ export const MainContextProvider = ({ children }) => {
 
         return unsubscribe;
       };
-      fetchTeacherData();
+      fetchStudentData();
     }
-  }, [teacherId]);
+  }, [studentId]);
 
   const signInUser = (email, password) => {
     setLoading(true);
@@ -145,13 +153,17 @@ export const MainContextProvider = ({ children }) => {
 
   const contextValue = {
     adminId,
+    student,
+    setStudent,
+    studentId,
+    studentData,
     teacher,
-    teacherData,
+    setTeacher,
     teacherId,
+    teacherData,
     signInUser,
     isOpen,
     setIsOpen,
-    setTeacher,
     logoutUser,
     courses,
     teachers,

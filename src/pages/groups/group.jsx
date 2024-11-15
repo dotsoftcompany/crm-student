@@ -30,14 +30,6 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from '@/components/ui/tooltip';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuShortcut,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 
@@ -52,11 +44,7 @@ import DeleteAlert from '@/components/dialogs/delete-alert';
 import AddExamDialog from '@/components/dialogs/add-exam';
 import { Switch } from '@/components/ui/switch';
 import { useToast } from '@/components/ui/use-toast';
-import { scoreColor } from '@/lib/utils';
-import AddEvaluation from '@/components/dialogs/add-evaluation';
-import { format } from 'date-fns';
 import Evaluation from '@/components/groups/evaluation/evaluation';
-import { Badge } from '@/components/ui/badge';
 import Tasks from '@/components/groups/tasks/tasks';
 
 const Group = () => {
@@ -183,14 +171,14 @@ const Group = () => {
     }
 
     debounceRef.current = setTimeout(() => {
-      if (searchTerm) {
-        const filtered = exams.filter((exam) =>
-          exam.title.toLowerCase().includes(searchTerm.toLowerCase())
-        );
-        setFilteredExams(filtered);
-      } else {
-        setFilteredExams(exams);
-      }
+      const filtered = exams.filter(
+        (exam) =>
+          exam.isShow &&
+          (!searchTerm ||
+            exam.title.toLowerCase().includes(searchTerm.toLowerCase()))
+      );
+
+      setFilteredExams(filtered);
     }, 300);
 
     return () => {
@@ -343,11 +331,15 @@ const Group = () => {
           <Tasks groupId={groupId} adminId={adminId} />
         </TabsContent>
         <TabsContent value="evaluation">
-          <Evaluation groupId={groupId} students={groupStudents} groupStudents={groupStudents} />
+          <Evaluation
+            groupId={groupId}
+            students={groupStudents}
+            groupStudents={groupStudents}
+          />
         </TabsContent>
         <TabsContent value="exams">
           <div className="space-y-2 pt-2">
-            <div className="flex justify-between items-center">
+            <div className="flex items-center">
               <div className="relative">
                 <Input
                   className="peer pe-9 ps-9 w-full lg:w-96"
@@ -360,13 +352,6 @@ const Group = () => {
                   <Search size={16} strokeWidth={2} />
                 </div>
               </div>
-              <Button
-                onClick={() => setOpenAddExam(true)}
-                variant="secondary"
-                className="dark:bg-white dark:text-black"
-              >
-                Imtihon qo'shish
-              </Button>
             </div>
 
             <div className="overflow-x-auto">
@@ -381,7 +366,6 @@ const Group = () => {
                     <TableHead>End date</TableHead>
                     <TableHead>Place</TableHead>
                     <TableHead>Status</TableHead>
-                    <TableHead>Is show</TableHead>
                     <TableHead className="rounded-tr-md text-center">
                       View
                     </TableHead>
@@ -393,28 +377,10 @@ const Group = () => {
                       <Link to={`/groups/${groupId}/exam/${exam.id}`}>
                         <TableCell className="w-72">{exam?.title}</TableCell>
                       </Link>
-                      <TableCell>{exam?.start}</TableCell>
-                      <TableCell>{exam?.end}</TableCell>
+                      <TableCell className="whitespace-nowrap">{exam?.start}</TableCell>
+                      <TableCell className="whitespace-nowrap">{exam?.end}</TableCell>
                       <TableCell>{exam?.type}</TableCell>
                       <TableCell>{exam?.status}</TableCell>
-                      <TableCell
-                        className="flex items-center mt-2.5 gap-1.5"
-                        title="O'quvchilarga ko'rsatish"
-                      >
-                        <Switch
-                          key={exam?.id}
-                          disabled={!!disabled[exam.id]}
-                          checked={exam?.isShow}
-                          onCheckedChange={() =>
-                            toggleIsShow(exam?.id, exam?.isShow)
-                          }
-                        />
-                        <Loader
-                          className={`w-4 h-4 animate-spin ${
-                            !!disabled[exam.id] ? 'opacity-100' : 'opacity-0'
-                          }`}
-                        />
-                      </TableCell>
                       <TableCell className="text-center">
                         <Link to={`/groups/${groupId}/exam/${exam.id}`}>
                           <Button

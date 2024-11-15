@@ -20,7 +20,7 @@ import { SheetMenu } from '@/components/layout/sheet-menu';
 import { MonthPicker } from '@/components/ui/month-picker';
 
 function MainPage() {
-  const { groups, teacherData, teachers, students } = useMainContext();
+  const { groups, studentData, teachers, students } = useMainContext();
   const [month, setMonth] = React.useState(null);
 
   const totalStudents = groups.reduce((acc, group) => {
@@ -38,7 +38,7 @@ function MainPage() {
           <div className="flex items-center gap-2">
             <SheetMenu />
             <h2 className="text-2xl font-bold tracking-tight">
-              {teacherData.fullName}
+              {studentData.fullName}
             </h2>
           </div>
           <div className="hidden items-center space-x-2 md:flex">

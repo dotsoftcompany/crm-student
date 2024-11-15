@@ -25,7 +25,7 @@ import {
 import { useToast } from '@/components/ui/use-toast';
 
 function TaskChat({ task, groupStudents, groupId, taskId, messages }) {
-  const { adminId, courses, groups, teacherData } = useMainContext();
+  const { adminId, courses, groups, studentData } = useMainContext();
   const group = groups.find((g) => g.id === groupId);
 
   const { toast } = useToast();
@@ -61,8 +61,8 @@ function TaskChat({ task, groupStudents, groupId, taskId, messages }) {
 
     const messageData = {
       message: data.message,
-      senderId: teacherData.id,
-      senderName: teacherData.fullName,
+      senderId: studentData.id,
+      senderName: studentData.fullName,
     };
 
     await saveChatMessage(messageData);
@@ -97,12 +97,16 @@ function TaskChat({ task, groupStudents, groupId, taskId, messages }) {
   };
 
   const getInitials = (fullName) => {
-    const nameParts = fullName.split(' ');
+    if (!fullName) return;
 
-    if (nameParts.length === 1) {
+    const nameParts = fullName?.split(' ');
+
+    if (nameParts?.length === 1) {
       return nameParts[0].slice(0, 2).toUpperCase();
     } else {
-      return nameParts[0][0].toUpperCase() + nameParts[1][0].toUpperCase();
+      return (
+        nameParts[0][0].toUpperCase() + '.' + nameParts[1][0].toUpperCase()
+      );
     }
   };
 
@@ -163,12 +167,12 @@ function TaskChat({ task, groupStudents, groupId, taskId, messages }) {
                     className="flex items-start gap-2 my-2 max-w-md"
                   >
                     <Avatar
-                      title={teacherData?.fullName}
+                      title="O'qituvchi"
                       className="cursor-pointer"
                     >
                       <AvatarImage src="" />
                       <AvatarFallback className="text-sm font-medium">
-                        {getInitials(teacherData?.fullName)}
+                        O'
                       </AvatarFallback>
                     </Avatar>
                     <a
@@ -179,7 +183,7 @@ function TaskChat({ task, groupStudents, groupId, taskId, messages }) {
                     >
                       <div className="pl-2.5 pr-4 pt-1 pb-3 rounded-lg border border-border hover:border-ring duration-200 cursor-pointer bg-muted">
                         <p className="text-xs font-medium pb-1.5 text-blue-500">
-                          {teacherData?.fullName}
+                          O'qituvchi
                         </p>
                         <div className="flex items-start gap-3">
                           {type === 'application/pdf' ? (
@@ -218,41 +222,26 @@ function TaskChat({ task, groupStudents, groupId, taskId, messages }) {
 
           <div className="flex-1 overflow-y-auto py-4 pt-0">
             {messages.map((msg) => (
-              <ContextMenu key={msg.id}>
-                <ContextMenuTrigger>
-                  <div className="relative flex items-start gap-2 my-2 max-w-md">
-                    <Avatar title={msg?.senderName} className="cursor-pointer">
-                      <AvatarImage src="" />
-                      <AvatarFallback className="text-sm font-medium">
-                        {getInitials(msg?.senderName)}
-                      </AvatarFallback>
-                    </Avatar>
-                    <div className="pl-2.5 pr-4 pt-1 pb-3 rounded-lg border border-border bg-muted relative">
-                      <p className="text-xs font-medium text-blue-500">
-                        {msg?.senderName}
-                      </p>
-                      <h4 className="text-sm pt-0 pb-2">{msg.message}</h4>
-                      <small className="text-muted-foreground absolute bottom-1 right-2.5 z-10 bg-muted opacity-80">
-                        {formatTime(msg.timestamp)}
-                      </small>
-                    </div>
-                  </div>
-                </ContextMenuTrigger>
-                <ContextMenuContent>
-                  <ContextMenuItem
-                    className="!text-xs"
-                    onClick={() => copyMessage(msg.message)}
-                  >
-                    Copy text
-                  </ContextMenuItem>
-                  <ContextMenuItem
-                    className="!text-xs"
-                    onClick={() => deleteMessage(msg.id)}
-                  >
-                    Delete
-                  </ContextMenuItem>
-                </ContextMenuContent>
-              </ContextMenu>
+              <div
+                key={msg.id}
+                className="relative flex items-start gap-2 my-2 max-w-md"
+              >
+                <Avatar title={msg?.senderName} className="cursor-pointer">
+                  <AvatarImage src="" />
+                  <AvatarFallback className="text-sm font-medium">
+                    {getInitials(msg?.senderName)}
+                  </AvatarFallback>
+                </Avatar>
+                <div className="pl-2.5 pr-4 pt-1 pb-3 rounded-lg border border-border bg-muted relative">
+                  <p className="text-xs font-medium text-blue-500">
+                    {msg?.senderName}
+                  </p>
+                  <h4 className="text-sm pt-0 pb-2">{msg.message}</h4>
+                  <small className="text-muted-foreground absolute bottom-1 right-2.5 z-10 bg-muted opacity-80">
+                    {formatTime(msg.timestamp)}
+                  </small>
+                </div>
+              </div>
             ))}
           </div>
         </div>

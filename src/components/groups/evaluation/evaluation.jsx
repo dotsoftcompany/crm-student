@@ -24,7 +24,7 @@ import EditDialog from '@/components/dialogs/edit-dialog';
 import EditEvaluation from './edit';
 
 function Evaluation({ groupId, students }) {
-  const { adminId } = useMainContext();
+  const { adminId, studentId } = useMainContext();
   const [openAddEvaluation, setOpenAddEvaluation] = useState(false);
   const [loading, setLoading] = useState(true);
 
@@ -34,23 +34,52 @@ function Evaluation({ groupId, students }) {
   const [evaluations, setEvaluations] = useState([]);
   const [selectedDate, setSelectedDate] = useState(null);
 
+  const student = students.find((s) => s.id === studentId);
+  // const studentEvaluations= evaluations.filter
+  console.log(evaluations);
+
   const convertTimestampToDate = (timestamp) => {
     return new Date(timestamp.seconds * 1000);
   };
 
-  const sortedEvaluations = evaluations.sort(
-    (a, b) => a.timestamp.seconds - b.timestamp.seconds
-  );
+  // Step 1: Filter evaluations for the specific studentId
+  const studentEvaluations = evaluations.filter((item) => {
+    const hasStudent = item.students.some(
+      (student) => student.id === studentId
+    );
+    console.log('Checking item:', item);
+    console.log('Student found:', hasStudent);
+    return hasStudent;
+  });
 
+  // Step 2: Check if we have any evaluations for the student
+  if (studentEvaluations.length === 0) {
+    console.warn('No evaluations found for studentId:', studentId);
+  }
+
+  // Step 3: Sort the filtered evaluations by timestamp
+  const sortedEvaluations = studentEvaluations.sort((a, b) => {
+    return a.timestamp.seconds - b.timestamp.seconds;
+  });
+
+  // Step 4: Filter evaluations by selected date (if provided)
   const filteredEvaluations = sortedEvaluations.filter((evaluation) => {
     if (!selectedDate) return true;
 
     const evaluationDate = convertTimestampToDate(evaluation.timestamp);
-    return (
+    const isSameDate =
       evaluationDate.toLocaleDateString('en-GB') ===
-      selectedDate.toLocaleDateString('en-GB')
-    );
+      selectedDate.toLocaleDateString('en-GB');
+
+    console.log('Evaluation Date:', evaluationDate);
+    console.log('Selected Date:', selectedDate);
+    console.log('Is same date:', isSameDate);
+
+    return isSameDate;
   });
+
+  // Optional: Log the final filtered evaluations
+  console.log('Filtered Evaluations:', filteredEvaluations);
 
   const clearDate = () => setSelectedDate(null);
 
@@ -125,29 +154,17 @@ function Evaluation({ groupId, students }) {
               />
             )}
           </div>
-          <Button
-            onClick={() => setOpenAddEvaluation(true)}
-            variant="secondary"
-            className="dark:bg-white dark:text-black"
-          >
-            Baholash
-          </Button>
         </div>
 
         <div className="overflow-x-auto rounded-lg">
           <div className="inline-flex border border-border rounded-lg min-w-fit">
             <div className="flex-shrink-0 w-44 md:w-52 !sticky left-0 bg-muted/50 z-10 shadow">
               <div className="font-medium text-sm p-4 border-b border-border">
-                Student's Name
+                O'quvchi ismi
               </div>
-              {students.map((student) => (
-                <div
-                  key={student.id}
-                  className="p-4 text-sm border-b  border-border whitespace-nowrap truncate bg-muted/50"
-                >
-                  {student.fullName}
-                </div>
-              ))}
+              <div className="p-4 text-sm border-b  border-border whitespace-nowrap truncate bg-muted/50">
+                {student?.fullName}
+              </div>
             </div>
 
             <div className="flex overflow-x-auto rounded-r-lg">
@@ -157,85 +174,29 @@ function Evaluation({ groupId, students }) {
                   const date = new Date(seconds * 1000 + nanoseconds / 1000000);
                   return format(date, 'dd.MM.yy');
                 }
+                const studentScore =
+                  evaluation.students.find((s) => s.id === studentId)?.score ||
+                  '-';
+
                 return (
                   <div key={evaluation.id} className="flex-shrink-0 group">
-                    <div className="relative p-4 border-l  border-border border-b bg-muted/50">
-                      <span className="absolute top-1/2 -translate-y-1/2 left-1/2 -translate-x-1/2 text-xs text-muted-foreground font-medium group-hover:invisible">
+                    <div className="relative p-3.5 border-l border-border border-b bg-muted/50">
+                      <span className="text-xs text-muted-foreground font-medium">
                         {formatDate(evaluation.timestamp)}
                       </span>
-                      <DropdownMenu>
-                        <DropdownMenuTrigger
-                          className="invisible group-hover:visible"
-                          asChild
-                          aria-hidden="true"
-                        >
-                          <Button
-                            variant="ghost"
-                            className="flex h-[1.25rem] w-8 p-0 data-[state=open]:bg-muted rounded-sm"
-                          >
-                            <svg
-                              xmlns="http://www.w3.org/2000/svg"
-                              fill="none"
-                              viewBox="0 0 24 24"
-                              strokeWidth={2}
-                              stroke="currentColor"
-                              className="h-5 w-5"
-                            >
-                              <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                d="M6.75 12a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0ZM12.75 12a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0ZM18.75 12a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0Z"
-                              />
-                            </svg>
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end" className="w-[160px]">
-                          <DropdownMenuItem
-                            className="!text-sm"
-                            onSelect={() => {
-                              setOpenEdit(true);
-                              setId(evaluation.id);
-                              document.body.style.pointerEvents = '';
-                            }}
-                          >
-                            Edit
-                          </DropdownMenuItem>
-                          <DropdownMenuSeparator />
-                          <DropdownMenuItem
-                            className="!text-sm"
-                            onSelect={() => {
-                              setOpenDelete(true);
-                              setId(evaluation.id);
-                              document.body.style.pointerEvents = '';
-                            }}
-                          >
-                            Delete
-                            <DropdownMenuShortcut>⌘⌫</DropdownMenuShortcut>
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
                     </div>
 
-                    {students.map((student) => {
-                      const studentScore =
-                        evaluation.students.find((s) => s.id === student.id)
-                          ?.score || '-';
-
-                      return (
-                        <div
-                          key={student.id}
-                          className={`flex items-center text-sm justify-center p-4 border-l border-b  border-border font-bold`}
-                        >
-                          {studentScore}
-                        </div>
-                      );
-                    })}
+                    <div
+                      className={`flex items-center text-sm justify-center p-4 border-l border-b  border-border font-bold`}
+                    >
+                      {studentScore}
+                    </div>
                   </div>
                 );
               })}
               {filteredEvaluations.length === 0 && (
-                <div className="flex-shrink-0 group flex items-center justify-center w-14">
-                  <p className="-rotate-90 text-muted-foreground text-sm whitespace-nowrap">
+                <div className="flex-shrink-0 group flex items-center justify-center w-full px-3">
+                  <p className="text-muted-foreground text-sm whitespace-nowrap">
                     Ma'lumot topilmadi.
                   </p>
                 </div>

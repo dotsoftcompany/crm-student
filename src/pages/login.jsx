@@ -30,7 +30,7 @@ function Login() {
   };
 
   const signIn = async () => {
-    const email = `${data.username}@teacher.uz`;
+    const email = `${data.username}@student.uz`;
     const password = data.password;
 
     if (!email || !password) {
@@ -70,7 +70,7 @@ function Login() {
                   placeholder="johndoe"
                 />
                 <span className="pointer-events-none absolute inset-y-0 end-0 flex items-center justify-center pe-3 text-sm bg-background my-0.5 mr-0.5 rounded-r-md text-muted-foreground peer-disabled:opacity-50">
-                  @teacher.uz
+                  @student.uz
                 </span>
               </div>
             </div>

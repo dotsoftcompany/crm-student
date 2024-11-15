@@ -32,7 +32,7 @@ import {
   query,
   where,
 } from 'firebase/firestore';
-import { Eye, PlusCircle, Search, Trash } from 'lucide-react';
+import { Eye, Search } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 
@@ -163,16 +163,14 @@ const GroupExam = () => {
       </div>
     );
   }
+
   const mergedStudents = groupStudents.map((groupStudent) => {
-    // Find the student in submittedStudents
     const submittedStudent = submittedStudents.find(
       (subStudent) => subStudent.id === groupStudent.id
     );
 
-    // If found in submittedStudents, return submittedStudent, else return groupStudent
     return submittedStudent || groupStudent;
   });
-  console.log(mergedStudents);
 
   return (
     <div className="px-4 lg:px-8 mt-4">
@@ -187,107 +185,13 @@ const GroupExam = () => {
       />
       <ExamHeader exam={exam} loading={loading} />
 
-      <Tabs defaultValue="students" className="py-4">
+      <Tabs defaultValue="questions" className="py-4">
         <TabsList>
-          <TabsTrigger value="students">O'quvchilar</TabsTrigger>
           <TabsTrigger value="questions">Savollar</TabsTrigger>
-          <TabsTrigger value="add-question">Savol qo'shish</TabsTrigger>
+          <TabsTrigger value="results">Natijalar</TabsTrigger>
         </TabsList>
-        <TabsContent value="students">
-          <div className="space-y-2 pt-2">
-            <div className="flex justify-between items-center">
-              <div className="relative">
-                <Input
-                  className="peer pe-9 ps-9 w-full lg:w-96"
-                  // value={searchTerm}
-                  // onChange={(e) => setSearchTerm(e.target.value)}
-                  placeholder="O'quvchini qidirish..."
-                  type="search"
-                />
-                <div className="pointer-events-none absolute inset-y-0 start-0 flex items-center justify-center ps-3 text-muted-foreground/80 peer-disabled:opacity-50">
-                  <Search size={16} strokeWidth={2} />
-                </div>
-              </div>
-              <Button
-                // onClick={() => setOpenAddExam(true)}
-                variant="secondary"
-                className="dark:bg-white dark:text-black"
-              >
-                Imtihon qo'shish
-              </Button>
-            </div>
-
-            <div className="overflow-x-auto">
-              <Table className="min-w-[50rem] w-full">
-                <TableCaption>
-                  {(loading && 'Loading...') ||
-                    (!mergedStudents.length && 'No result.')}
-                </TableCaption>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead className="w-64 rounded-tl-md">
-                      Ism familiya
-                    </TableHead>
-                    <TableHead className="">Topshirganligi</TableHead>
-                    <TableHead className="">Topshirgan vaqti</TableHead>
-                    <TableHead className="">Nechtadan</TableHead>
-                    <TableHead className="">Foizda (%)</TableHead>
-                    <TableHead className="rounded-tr-md text-center">
-                      Barcha natija
-                    </TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {mergedStudents.map((student) => (
-                    <TableRow>
-                      <TableCell className="w-64">{student.fullName}</TableCell>
-                      <TableCell
-                        className={
-                          student?.results ? 'text-green-500' : 'text-red-500'
-                        }
-                      >
-                        {student?.results ? 'Topshirdi' : 'Topshirmadi'}
-                      </TableCell>
-                      <TableCell>
-                        {student?.results ? formatDate(student.timestamp) : '-'}
-                      </TableCell>
-                      <TableCell>
-                        {student?.results ? '1/10' : '0/10'}
-                      </TableCell>
-                      <TableCell>{student?.results ? '10%' : '0%'}</TableCell>
-                      <TableCell className="text-center">
-                        <Link
-                          to={`/groups/${groupId}/exams/${examId}/student/${student.id}`}
-                        >
-                          <Button
-                            // onClick={() => setShowAbsenteeStudentsDialog(true)}
-                            variant="link"
-                          >
-                            <TooltipProvider>
-                              <Tooltip>
-                                <TooltipTrigger>
-                                  <Eye className="w-5 h-5" />
-                                </TooltipTrigger>
-                                <TooltipContent>
-                                  <small>Batafsil</small>
-                                </TooltipContent>
-                              </Tooltip>
-                            </TooltipProvider>
-                          </Button>
-                        </Link>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </div>
-          </div>
-        </TabsContent>
         <TabsContent value="questions">
           <Questions adminId={adminId} groupId={groupId} examId={examId} />
-        </TabsContent>
-        <TabsContent value="add-question">
-          <AddQuestion adminId={adminId} groupId={groupId} examId={examId} />
         </TabsContent>
       </Tabs>
     </div>

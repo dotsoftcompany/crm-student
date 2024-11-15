@@ -18,7 +18,7 @@ function GroupHeader({ group }) {
     <div className="space-y-2 py-4 w-full border-b border-border">
       <div className="flex items-center gap-2">
         <h1 className="text-xl md:text-2xl font-semibold">
-          {courses.filter((item) => item.id === group.courseId)[0].courseTitle}
+          {courses.filter((item) => item.id === group.courseId)[0]?.courseTitle}
         </h1>
         <span className="text-base text-muted-foreground mt-1">
           #{group.groupNumber}

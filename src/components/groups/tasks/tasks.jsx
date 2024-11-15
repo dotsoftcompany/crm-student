@@ -59,7 +59,7 @@ function Tasks({ groupId, adminId }) {
   function formatDate(timestamp) {
     const { seconds, nanoseconds } = timestamp;
     const date = new Date(seconds * 1000 + nanoseconds / 1000000);
-    return format(date, 'dd.MM.yy');
+    return format(date, 'dd.MM.yyyy');
   }
 
   return (
@@ -70,7 +70,7 @@ function Tasks({ groupId, adminId }) {
         groupId={groupId}
         fetchTasks={fetchTasks}
       />
-      <div className="flex justify-between items-center">
+      <div className="flex items-center">
         <div className="relative">
           <Input
             className="peer pe-9 ps-9 w-full lg:w-96"
@@ -83,13 +83,6 @@ function Tasks({ groupId, adminId }) {
             <Search size={16} strokeWidth={2} />
           </div>
         </div>
-        <Button
-          onClick={() => setOpen(true)}
-          variant="secondary"
-          className="dark:bg-white dark:text-black"
-        >
-          Vazifa qo'shish
-        </Button>
       </div>
 
       <div className="overflow-x-auto">
@@ -105,7 +98,6 @@ function Tasks({ groupId, adminId }) {
               <TableHead className="text-center">Due date</TableHead>
               <TableHead className="text-center">Attachments</TableHead>
               <TableHead className="text-center">View</TableHead>
-              <TableHead></TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -133,55 +125,6 @@ function Tasks({ groupId, adminId }) {
                       <Eye className="w-5 h-5" />
                     </Button>
                   </Link>
-                </TableCell>
-                <TableCell>
-                  <DropdownMenu>
-                    <DropdownMenuTrigger
-                      className="mx-auto"
-                      asChild
-                      aria-hidden="true"
-                    >
-                      <Button
-                        variant="ghost"
-                        className="flex h-8 w-8 p-0 data-[state=open]:bg-muted"
-                      >
-                        <svg
-                          xmlns="http://www.w3.org/2000/svg"
-                          fill="none"
-                          viewBox="0 0 24 24"
-                          strokeWidth={2}
-                          stroke="currentColor"
-                          className="h-5 w-5"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            d="M6.75 12a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0ZM12.75 12a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0ZM18.75 12a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0Z"
-                          />
-                        </svg>
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end" className="w-[160px]">
-                      <DropdownMenuItem
-                        onSelect={() => {
-                          //   setOpenEdit(true);
-                          document.body.style.pointerEvents = '';
-                        }}
-                      >
-                        Edit
-                      </DropdownMenuItem>
-                      <DropdownMenuSeparator />
-                      <DropdownMenuItem
-                        onSelect={() => {
-                          //   setOpenDelete(true);
-                          document.body.style.pointerEvents = '';
-                        }}
-                      >
-                        Delete
-                        <DropdownMenuShortcut>⌘⌫</DropdownMenuShortcut>
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
                 </TableCell>
               </TableRow>
             ))}

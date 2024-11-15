@@ -1,28 +1,79 @@
 import React, { useEffect, useState } from 'react';
-import { collection, getDocs } from 'firebase/firestore';
+import { collection, doc, getDocs, setDoc } from 'firebase/firestore';
 import { db } from '@/api/firebase';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuShortcut,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
-import EditDialog from '@/components/dialogs/edit-dialog';
-import DeleteAlert from '@/components/dialogs/delete-alert';
-import QuestionEdit from './questionEdit';
+import { useMainContext } from '@/context/main-context';
+import { useToast } from '@/components/ui/use-toast';
+import { ToastAction } from '@/components/ui/toast';
 
 function Questions({ adminId, groupId, examId }) {
+  const { studentData } = useMainContext();
   const [questions, setQuestions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [openDelete, setOpenDelete] = useState(false);
-  const [openEdit, setOpenEdit] = useState(false);
-  const [id, setId] = useState('');
+  const [studentAnswers, setStudentAnswers] = useState([]);
+  const [isSubmitted, setIsSubmitted] = useState(false);
   const options = ['A', 'B', 'C', 'D'];
+
+  const { toast } = useToast();
+
+  // Check localStorage for submission status of the current exam
+  useEffect(() => {
+    const submittedStatus = localStorage.getItem(`exam-${examId}-submitted`);
+    setIsSubmitted(submittedStatus === 'true');
+  }, [examId]);
+
+  const handleAnswerSelect = (questionIndex, answerOption) => {
+    if (!isSubmitted) {
+      const updatedAnswers = [...studentAnswers];
+      updatedAnswers[questionIndex] = answerOption;
+      setStudentAnswers(updatedAnswers);
+
+      // Save the updated answers to localStorage
+      localStorage.setItem(
+        `exam-${examId}-answers`,
+        JSON.stringify(updatedAnswers)
+      );
+    }
+  };
+
+  const handleSaveAnswers = async () => {
+    // Check if all questions have been answered
+    if (studentAnswers.some((answer) => !answer)) {
+      toast({
+        variant: 'destructive',
+        title: 'Barchasi belgilanmadi!',
+        description:
+          'Iltimos barcha savollarga javob berganingizga ishonch komil qiling!',
+      });
+      return;
+    }
+
+    try {
+      const submittedStudentRef = doc(
+        db,
+        `users/${adminId}/groups/${groupId}/exams/${examId}/submittedStudents`,
+        studentData.id
+      );
+
+      await setDoc(submittedStudentRef, {
+        id: studentData.id,
+        fullName: studentData.fullName,
+        answers: studentAnswers,
+        timestamp: new Date().getTime(),
+      });
+
+      setIsSubmitted(true);
+      // Save the submission status to localStorage
+      localStorage.setItem(`exam-${examId}-submitted`, 'true');
+      toast({
+        title: 'Student answers submitted successfully',
+      });
+    } catch (err) {
+      console.error('Error submitting student answers:', err);
+    }
+  };
 
   const fetchQuestions = async () => {
     try {
@@ -38,6 +89,14 @@ function Questions({ adminId, groupId, examId }) {
       }));
 
       setQuestions(questionsList);
+
+      // Check localStorage for existing answers
+      const savedAnswers = JSON.parse(
+        localStorage.getItem(`exam-${examId}-answers`)
+      );
+      setStudentAnswers(
+        savedAnswers || new Array(questionsList.length).fill('')
+      );
     } catch (err) {
       setError(err.message);
     } finally {
@@ -55,12 +114,10 @@ function Questions({ adminId, groupId, examId }) {
         {Array.from({ length: 3 }).map((_, index) => (
           <li key={index} className="w-full">
             <div className="flex items-center justify-between my-2">
-              {/* Skeleton for question title */}
               <Skeleton className="h-6 w-1/2" />
               <Skeleton className="h-8 w-8 rounded-full" />
             </div>
             <div className="border border-border rounded-md">
-              {/* Skeleton for answers */}
               {Array.from({ length: 4 }).map((_, i) => (
                 <div
                   key={i}
@@ -81,28 +138,6 @@ function Questions({ adminId, groupId, examId }) {
 
   return (
     <div>
-      <EditDialog open={openEdit} setOpen={setOpenEdit}>
-        <QuestionEdit
-          questions={questions}
-          ids={{
-            adminId: adminId,
-            groupId: groupId,
-            examId: examId,
-            questionId: id,
-          }}
-          fetchQuestions={fetchQuestions}
-          setOpen={setOpenEdit}
-        />
-      </EditDialog>
-
-      <DeleteAlert
-        id={id}
-        collection={`users/${adminId}/groups/${groupId}/exams/${examId}/questions`}
-        fetch={fetchQuestions}
-        open={openDelete}
-        setOpen={setOpenDelete}
-      />
-
       {!questions.length && (
         <p className="text-center text-muted-foreground my-10">
           Hali savol qo'shilmagan
@@ -110,76 +145,31 @@ function Questions({ adminId, groupId, examId }) {
       )}
 
       <ul className="w-full">
-        {questions.map((question) => (
-          <li className="w-full">
-            <span className="flex items-center justify-between my-2">
-              <h2 className="text-lg font-semibold">{question.title}</h2>
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button
-                    variant="ghost"
-                    className="flex h-8 w-8 p-0 data-[state=open]:bg-muted"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                    }}
-                  >
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      strokeWidth={2}
-                      stroke="currentColor"
-                      className="h-5 w-5"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        d="M6.75 12a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0ZM12.75 12a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0ZM18.75 12a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0Z"
-                      />
-                    </svg>
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-[160px]">
-                  <DropdownMenuItem
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setOpenEdit(true);
-                      setId(question.id);
-                      document.body.style.pointerEvents = '';
-                    }}
-                  >
-                    Tahrirlash
-                  </DropdownMenuItem>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setOpenDelete(true);
-                      setId(question.id);
-                      document.body.style.pointerEvents = '';
-                    }}
-                  >
-                    O'chirish
-                    <DropdownMenuShortcut>⌘⌫</DropdownMenuShortcut>
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
+        {questions.map((question, qIndex) => (
+          <li key={question.id} className="w-full mb-4">
+            <span className="flex my-2">
+              <h2 className="text-lg font-semibold">
+                {qIndex + 1}. {question.title}
+              </h2>
             </span>
             <ul className="border border-border rounded-md">
               {question.answers.map((option, index) => (
                 <li
-                  key={option.id}
-                  className={`flex items-center py-2.5 px-4 first:rounded-t-md last:rounded-b-md border-b border-border ${
-                    question.correctAnswer === String.fromCharCode(97 + index)
-                      ? 'bg-blue-500'
-                      : 'bg-background'
+                  key={index}
+                  className={`flex items-center py-2.5 px-4 first:rounded-t-md last:rounded-b-md border-b border-border group ${
+                    studentAnswers[qIndex] === options[index]
+                      ? 'bg-blue-500 text-white'
+                      : isSubmitted
+                      ? 'cursor-not-allowed opacity-50'
+                      : 'hover:bg-blue-500'
                   }`}
+                  onClick={() => handleAnswerSelect(qIndex, options[index])}
                 >
                   <span
-                    className={`flex items-center justify-center rounded-full text-xs w-5 h-5 p-1 ${
-                      question.correctAnswer === String.fromCharCode(97 + index)
+                    className={`flex items-center justify-center rounded-full bg-blue-500 text-xs w-5 h-5 ${
+                      studentAnswers[qIndex] === options[index]
                         ? 'bg-white text-blue-500'
-                        : 'bg-blue-500'
+                        : ''
                     }`}
                   >
                     {options[index]}
@@ -191,6 +181,14 @@ function Questions({ adminId, groupId, examId }) {
           </li>
         ))}
       </ul>
+
+      <Button
+        onClick={handleSaveAnswers}
+        className="mt-4"
+        disabled={isSubmitted}
+      >
+        {isSubmitted ? 'Javoblar yuborilgan' : 'Javoblarni yuborish'}
+      </Button>
     </div>
   );
 }

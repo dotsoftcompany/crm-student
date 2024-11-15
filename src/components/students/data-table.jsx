@@ -71,11 +71,13 @@ export default function StudentsDataTable({ data, loading, children }) {
       ),
     },
     {
-      accessorKey: 'parentPhoneNumber',
-      header: 'Parents Phone',
+      accessorKey: 'telegram',
+      header: 'Telegram',
       cell: ({ row }) => (
         <div className="whitespace-nowrap">
-          {formatPhoneNumber(row.getValue('parentPhoneNumber'))}
+          {`${row.getValue('telegram')}`
+            ? `@${row.getValue('telegram')}`
+            : 'No'}
         </div>
       ),
     },
@@ -86,19 +88,6 @@ export default function StudentsDataTable({ data, loading, children }) {
         <div className="truncate whitespace-nowrap">
           {row.getValue('address')}
         </div>
-      ),
-    },
-    {
-      accessorKey: 'view',
-      header: 'View',
-      cell: ({ row }) => (
-        <Button
-          onClick={() => handleRowClick(row.original.id)}
-          variant="ghost"
-          className="h-8 w-8 p-0"
-        >
-          <Eye className="h-4 w-4 cursor-pointer" />
-        </Button>
       ),
     },
   ];
