@@ -12,7 +12,7 @@ export default defineConfig({
   },
   server: {
     host: 'localhost',
-    port: 3000,
+    port: 4000,
   },
   resolve: {
     alias: {
