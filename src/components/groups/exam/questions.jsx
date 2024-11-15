@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { collection, doc, getDocs, setDoc } from 'firebase/firestore';
+import { collection, doc, getDocs, orderBy, query, setDoc } from 'firebase/firestore';
 import { db } from '@/api/firebase';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -81,7 +81,9 @@ function Questions({ adminId, groupId, examId }) {
         db,
         `users/${adminId}/groups/${groupId}/exams/${examId}/questions`
       );
-      const querySnapshot = await getDocs(questionsRef);
+
+      const questionsQuery = query(questionsRef, orderBy('createdAt', 'asc'));
+      const querySnapshot = await getDocs(questionsQuery);
 
       const questionsList = querySnapshot.docs.map((doc) => ({
         id: doc.id,
@@ -90,7 +92,6 @@ function Questions({ adminId, groupId, examId }) {
 
       setQuestions(questionsList);
 
-      // Check localStorage for existing answers
       const savedAnswers = JSON.parse(
         localStorage.getItem(`exam-${examId}-answers`)
       );
